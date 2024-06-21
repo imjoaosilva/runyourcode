@@ -4,7 +4,7 @@ use serenity::all::{
 };
 
 pub async fn run(ctx: Context, command: CommandInteraction) {
-    let language_input_text = CreateInputText::new(InputTextStyle::Short, "language", "language");
+    let language_input_text = CreateInputText::new(InputTextStyle::Short, "language", "language").placeholder("javascript, python, rust etc");
     let code_input_text = CreateInputText::new(InputTextStyle::Paragraph, "code", "code");
 
     let modal_language_component = CreateActionRow::InputText(language_input_text);
