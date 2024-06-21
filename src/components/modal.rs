@@ -17,6 +17,22 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
 
     if let Ok(data) = run_code(language.clone(), code.clone()).await {
         if data.ok {
+
+            if data.stderr != String::new() {
+                let embed = CreateEmbed::default().description(format!(
+                    "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
+                    language, code, language, data.stderr
+                ));
+
+                let reply_builder = EditInteractionResponse::new().add_embed(embed);
+
+                interaction
+                    .edit_response(ctx.http, reply_builder)
+                    .await
+                    .unwrap();
+                return;
+            }
+
             let embed = CreateEmbed::default().description(format!(
                 "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
                 language, code, language,data.stdout
