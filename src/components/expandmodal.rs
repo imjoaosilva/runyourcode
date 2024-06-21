@@ -1,11 +1,10 @@
-use crate::services::api::run_code;
+use crate::services::api::rust_expand;
 use serenity::all::{
     ActionRow, ActionRowComponent, Context, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, ModalInteraction
 };
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
-    let language = get_text(&interaction.data.components[0]);
-    let code = get_text(&interaction.data.components[1]);
+    let code = get_text(&interaction.data.components[0]);
 
     let response = CreateInteractionResponseMessage::new().content("Processing your request...");
     let building_builder = CreateInteractionResponse::Defer(response);
@@ -15,11 +14,11 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
         .await
         .unwrap();
 
-    if let Ok(data) = run_code(language.clone(), code.clone()).await {
-        if data.ok {
+    if let Ok(data) = rust_expand(String::from("2021"), code.clone()).await {
+        if data.success {
             let embed = CreateEmbed::default().description(format!(
                 "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
-                language, code, language,data.stdout
+                "rust", code, "rust", data.stdout
             ));
 
             let reply_builder = EditInteractionResponse::new().add_embed(embed);
@@ -30,8 +29,8 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
                 .unwrap();
         } else {
             let embed = CreateEmbed::default().description(format!(
-                "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n```",
-                language, code, data.stderr
+                "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
+                "rust", code, "rust", data.stderr
             ));
 
             let reply_builder = EditInteractionResponse::new().add_embed(embed);

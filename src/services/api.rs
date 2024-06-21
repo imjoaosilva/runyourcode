@@ -1,27 +1,8 @@
-use serde::{Deserialize, Serialize};
+use crate::{
+    models::api::{RequestBody, ResponseBody, RustExpand, RustExpandResponse},
+    utils::util::extract_relevant_lines,
+};
 use serde_json::json;
-
-#[derive(Serialize)]
-struct RequestBody {
-    command: String,
-    files: serde_json::Value,
-    sandbox: String,
-    version: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Files {
-    pub field: String,
-}
-
-#[derive(Deserialize)]
-pub struct ResponseBody {
-    pub id: String,
-    pub ok: bool,
-    pub duration: u64,
-    pub stdout: String,
-    pub stderr: String,
-}
 
 pub async fn run_code(language: String, code: String) -> Result<ResponseBody, String> {
     let body = RequestBody {
@@ -40,13 +21,36 @@ pub async fn run_code(language: String, code: String) -> Result<ResponseBody, St
         .send()
         .await
         .unwrap();
-    
+
     if response.status().is_success() {
-        
         let response: ResponseBody = response.json().await.unwrap();
         Ok(response)
     } else {
         Err("Failed to execute code!".to_string())
     }
-    
+}
+
+pub async fn rust_expand(edition: String, code: String) -> Result<RustExpandResponse, String> {
+    let body = RustExpand { edition, code };
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://play.rust-lang.org/macro-expansion")
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+
+    if response.status().is_success() {
+        let mut result: RustExpandResponse = response.json().await.unwrap();
+        result.stderr = extract_relevant_lines(
+            &result.stderr,
+            &["Finished ", "Compiling playground"],
+            &["error: aborting"],
+        ).to_owned();
+
+        Ok(result)
+    } else {
+        Err("Failed to expand code!".to_string())
+    }
 }
