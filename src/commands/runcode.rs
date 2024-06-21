@@ -1,40 +1,20 @@
 use serenity::all::{
-    CommandInteraction, Context, CreateCommand, CreateCommandOption, CreateEmbed, EditInteractionResponse, InteractionContext
+    CommandInteraction, Context, CreateActionRow, CreateCommand, CreateInputText,
+    CreateInteractionResponse, CreateModal, InputTextStyle, InteractionContext,
 };
-use super::super::services::api::run_code;
 
 pub async fn run(ctx: Context, command: CommandInteraction) {
-    
-    let language = command.data.options.get(0).unwrap().value.as_str().unwrap().to_string();
-    let code = command.data.options.get(1).unwrap().value.as_str().unwrap().to_string();
-    command.defer(&ctx.http).await.unwrap();
+    let language_input_text = CreateInputText::new(InputTextStyle::Short, "language", "language");
+    let code_input_text = CreateInputText::new(InputTextStyle::Paragraph, "code", "code");
 
-    if let Ok(data) = run_code(language.clone(), code.clone()).await {
-        
-        if data.ok {
-            let embed = CreateEmbed::default()
-                .description(format!("`Input` ```{}\n {}```\n`Output` ```{}\n```", language, code, data.stdout));
-            
-            let reply_builder = EditInteractionResponse::new()
-                .add_embed(embed);
-            
-            command.edit_response(ctx.http, reply_builder).await.unwrap();
-        } else {
-            let embed = CreateEmbed::default()
-                .description(format!("Input: ```{}\n{}```\nError Output: ```{}\n```", language, code, data.stderr));
-            
-            let reply_builder = EditInteractionResponse::new()
-                .add_embed(embed);
-            
-            command.edit_response(ctx.http, reply_builder).await.unwrap();
-        }
-    } else {
+    let modal_language_component = CreateActionRow::InputText(language_input_text);
+    let modal_code_component = CreateActionRow::InputText(code_input_text);
 
-        let reply_builder = EditInteractionResponse::new()
-            .content(String::from("Failed to execute code!"));
+    let modal = CreateModal::new("runcode_modal", "RunYourCode")
+        .components(vec![modal_language_component, modal_code_component]);
 
-        command.edit_response(ctx.http, reply_builder).await.unwrap();
-    }
+    let response = CreateInteractionResponse::Modal(modal);
+    command.create_response(&ctx.http, response).await.unwrap()
 }
 
 pub fn register() -> CreateCommand {
@@ -46,6 +26,4 @@ pub fn register() -> CreateCommand {
             InteractionContext::BotDm,
             InteractionContext::PrivateChannel,
         ])
-        .add_option(CreateCommandOption::new(serenity::all::CommandOptionType::String, "language", "The language of the code.").required(true))
-        .add_option(CreateCommandOption::new(serenity::all::CommandOptionType::String, "code", "The code to execute.").required(true))
 }
