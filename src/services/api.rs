@@ -23,7 +23,11 @@ pub async fn run_code(language: String, code: String) -> Result<ResponseBody, St
         .unwrap();
 
     if response.status().is_success() {
-        let response: ResponseBody = response.json().await.unwrap();
+        let mut response: ResponseBody = response.json().await.unwrap();
+
+        if response.stdout == "" {
+            response.stdout = "Nothing was returned".to_string();
+        };
         Ok(response)
     } else {
         Err("Failed to execute code!".to_string())
@@ -43,7 +47,8 @@ pub async fn rust_expand(edition: String, code: String) -> Result<RustExpandResp
 
     if response.status().is_success() {
         let mut result: RustExpandResponse = response.json().await.unwrap();
-        result.stderr = extract_relevant_lines(
+
+        result.stdout = extract_relevant_lines(
             &result.stderr,
             &["Finished ", "Compiling playground"],
             &["error: aborting"],

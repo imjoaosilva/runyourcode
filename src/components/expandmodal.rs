@@ -16,7 +16,8 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
 
     if let Ok(data) = rust_expand(String::from("2021"), code.clone()).await {
         if data.success {
-            let embed = CreateEmbed::default().description(format!(
+            let embed = CreateEmbed::default()
+                .description(format!(
                 "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
                 "rust", code, "rust", data.stdout
             ));
@@ -28,7 +29,8 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
                 .await
                 .unwrap();
         } else {
-            let embed = CreateEmbed::default().description(format!(
+            let embed = CreateEmbed::default()
+                .description(format!(
                 "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
                 "rust", code, "rust", data.stderr
             ));

@@ -1,6 +1,8 @@
 use crate::services::api::run_code;
 use serenity::all::{
-    ActionRow, ActionRowComponent, Context, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, ModalInteraction
+    ActionRow, ActionRowComponent, Context, CreateEmbed, CreateEmbedFooter,
+    CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse,
+    ModalInteraction,
 };
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
@@ -17,9 +19,10 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
 
     if let Ok(data) = run_code(language.clone(), code.clone()).await {
         if data.ok {
+            let footer = CreateEmbedFooter::new(format!("Language: {}", language));
 
             if data.stderr != String::new() {
-                let embed = CreateEmbed::default().description(format!(
+                let embed = CreateEmbed::default().footer(footer).description(format!(
                     "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
                     language, code, language, data.stderr
                 ));
@@ -33,10 +36,12 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
                 return;
             }
 
-            let embed = CreateEmbed::default().description(format!(
-                "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
-                language, code, language,data.stdout
-            ));
+            let embed = CreateEmbed::default()
+                .footer(footer)
+                .description(format!(
+                    "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
+                    language, code, language, data.stdout
+                ));
 
             let reply_builder = EditInteractionResponse::new().add_embed(embed);
 
