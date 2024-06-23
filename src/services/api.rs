@@ -49,7 +49,7 @@ pub async fn rust_expand(edition: String, code: String) -> Result<RustExpandResp
         let mut result: RustExpandResponse = response.json().await.unwrap();
 
         result.stdout = extract_relevant_lines(
-            &result.stderr,
+            &result.stdout,
             &["Finished ", "Compiling playground"],
             &["error: aborting"],
         ).to_owned();
