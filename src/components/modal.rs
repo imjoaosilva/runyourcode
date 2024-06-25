@@ -4,10 +4,12 @@ use serenity::all::{
     CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse,
     ModalInteraction,
 };
+use std::time::Instant;
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
     let language = get_text(&interaction.data.components[0]);
     let code = get_text(&interaction.data.components[1]);
+    let start = Instant::now();
 
     let response = CreateInteractionResponseMessage::new().content("Processing your request...");
     let building_builder = CreateInteractionResponse::Defer(response);
@@ -22,10 +24,14 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
             let footer = CreateEmbedFooter::new(format!("Language: {}", language));
 
             if data.stderr != String::new() {
-                let embed = CreateEmbed::default().footer(footer).description(format!(
-                    "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
-                    language, code, language, data.stderr
-                ));
+                let duration = start.elapsed();
+                let embed = CreateEmbed::default()
+                    .title(format!("Execution Time: {:?}", duration))
+                    .footer(footer)
+                    .description(format!(
+                        "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
+                        language, code, language, data.stderr
+                    ));
 
                 let reply_builder = EditInteractionResponse::new().add_embed(embed);
 
@@ -36,14 +42,28 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
                 return;
             }
 
+            let desc = format!(
+                "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
+                language, code, language, data.stdout
+            );
+
             let embed = CreateEmbed::default()
+                .title(format!("Execution Time: {:?}", start.elapsed()))
                 .footer(footer)
-                .description(format!(
-                    "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
-                    language, code, language, data.stdout
-                ));
+                .description(&desc);
 
             let reply_builder = EditInteractionResponse::new().add_embed(embed);
+
+            if desc.len() > 4095 {
+                let reply_builder =
+                    EditInteractionResponse::new().content("Output too long to display!");
+
+                interaction
+                    .edit_response(ctx.http, reply_builder)
+                    .await
+                    .unwrap();
+                return;
+            }
 
             interaction
                 .edit_response(ctx.http, reply_builder)

@@ -2,9 +2,11 @@ use crate::services::api::rust_expand;
 use serenity::all::{
     ActionRow, ActionRowComponent, Context, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, ModalInteraction
 };
+use std::time::Instant;
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
     let code = get_text(&interaction.data.components[0]);
+    let start = Instant::now();
 
     let response = CreateInteractionResponseMessage::new().content("Processing your request...");
     let building_builder = CreateInteractionResponse::Defer(response);
@@ -17,6 +19,7 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
     if let Ok(data) = rust_expand(String::from("2021"), code.clone()).await {
         if data.success {
             let embed = CreateEmbed::default()
+                .title(format!("Execution Time: {:?}", start.elapsed()))
                 .description(format!(
                 "`Input` ```{}\n{}```\n`Output` ```{}\n{}```",
                 "rust", code, "rust", data.stdout
@@ -30,6 +33,7 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
                 .unwrap();
         } else {
             let embed = CreateEmbed::default()
+                .title(format!("Execution Time: {:?}", start.elapsed()))
                 .description(format!(
                 "`Input:` ```{}\n{}```\n`Error Output`: ```{}\n{}```",
                 "rust", code, "rust", data.stderr
