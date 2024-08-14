@@ -1,4 +1,4 @@
-use crate::services::api::run_code;
+use crate::{models::api::ReqwestClientKey, services::api::run_code};
 use serenity::all::{
     ActionRow, ActionRowComponent, Context, CreateEmbed, CreateEmbedFooter,
     CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse,
@@ -7,6 +7,9 @@ use serenity::all::{
 use std::time::Instant;
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
+    let data = ctx.data.read().await;
+    let api_client = data.get::<ReqwestClientKey>().unwrap();
+
     let language = get_text(&interaction.data.components[0]);
     let code = get_text(&interaction.data.components[1]);
     let start = Instant::now();
@@ -19,7 +22,8 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
         .await
         .unwrap();
 
-    if let Ok(data) = run_code(language.clone(), code.clone()).await {
+
+    if let Ok(data) = run_code(language.clone(), code.clone(), api_client).await {
         if data.ok {
             let footer = CreateEmbedFooter::new(format!("Language: {}", language));
 

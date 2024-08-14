@@ -2,9 +2,10 @@ use crate::{
     models::api::{RequestBody, ResponseBody, RustExpand, RustExpandResponse},
     utils::util::extract_relevant_lines,
 };
+use reqwest::Client;
 use serde_json::json;
 
-pub async fn run_code(language: String, code: String) -> Result<ResponseBody, String> {
+pub async fn run_code(language: String, code: String, client: &Client) -> Result<ResponseBody, String> {
     let body = RequestBody {
         command: String::from("run"),
         files: json!({
@@ -14,7 +15,6 @@ pub async fn run_code(language: String, code: String) -> Result<ResponseBody, St
         version: String::new(),
     };
 
-    let client = reqwest::Client::new();
     let response = client
         .post("https://api.codapi.org/v1/exec")
         .json(&body)
@@ -34,10 +34,9 @@ pub async fn run_code(language: String, code: String) -> Result<ResponseBody, St
     }
 }
 
-pub async fn rust_expand(edition: String, code: String) -> Result<RustExpandResponse, String> {
+pub async fn rust_expand(edition: String, code: String, client: &Client) -> Result<RustExpandResponse, String> {
     let body = RustExpand { edition, code };
 
-    let client = reqwest::Client::new();
     let response = client
         .post("https://play.rust-lang.org/macro-expansion")
         .json(&body)

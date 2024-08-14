@@ -1,10 +1,13 @@
-use crate::services::api::rust_expand;
+use crate::{models::api::ReqwestClientKey, services::api::rust_expand};
 use serenity::all::{
     ActionRow, ActionRowComponent, Context, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, ModalInteraction
 };
 use std::time::Instant;
 
 pub async fn run(ctx: Context, interaction: ModalInteraction) {
+    let data = ctx.data.read().await;
+    let api_client = data.get::<ReqwestClientKey>().unwrap();
+    
     let code = get_text(&interaction.data.components[0]);
     let start = Instant::now();
 
@@ -16,7 +19,7 @@ pub async fn run(ctx: Context, interaction: ModalInteraction) {
         .await
         .unwrap();
 
-    if let Ok(data) = rust_expand(String::from("2021"), code.clone()).await {
+    if let Ok(data) = rust_expand(String::from("2021"), code.clone(), api_client).await {
         if data.success {
             let embed = CreateEmbed::default()
                 .title(format!("Execution Time: {:?}", start.elapsed()))

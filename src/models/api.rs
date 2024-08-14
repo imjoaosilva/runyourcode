@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
+use serenity::prelude::TypeMapKey;
 
+pub struct ReqwestClientKey;
+impl TypeMapKey for ReqwestClientKey {
+    type Value = reqwest::Client;
+}
 
 #[derive(Serialize)]
 pub struct RequestBody {
