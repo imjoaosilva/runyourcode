@@ -4,7 +4,8 @@ use serenity::all::{
 };
 
 pub async fn run(ctx: Context, command: CommandInteraction) {
-    let language_input_text = CreateInputText::new(InputTextStyle::Short, "language", "language").placeholder("javascript, python, rust etc");
+    let language_input_text = CreateInputText::new(InputTextStyle::Short, "language", "language")
+        .placeholder("javascript, python, rust etc");
     let code_input_text = CreateInputText::new(InputTextStyle::Paragraph, "code", "code");
 
     let modal_language_component = CreateActionRow::InputText(language_input_text);
@@ -14,7 +15,9 @@ pub async fn run(ctx: Context, command: CommandInteraction) {
         .components(vec![modal_language_component, modal_code_component]);
 
     let response = CreateInteractionResponse::Modal(modal);
-    command.create_response(&ctx.http, response).await.unwrap()
+    command.create_response(&ctx.http, response).await.unwrap();
+
+    println!("User: {}", command.user.name)
 }
 
 pub fn register() -> CreateCommand {
